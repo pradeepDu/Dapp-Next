@@ -1,7 +1,7 @@
 import React from "react";
 
-const NavBar = () => {
-  return <div>NavBar</div>;
-};
-
-export default NavBar;
+const NavBar = () => (
+  <div className="navbar bg-base-100">
+    <a className="btn btn-ghost normal-case text-xl">My App</a>
+  </div>
+);
