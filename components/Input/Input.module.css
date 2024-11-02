@@ -1,0 +1,41 @@
+/* Input.module.css */
+
+.input {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .input p {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+  
+  .input_box {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 0.5rem;
+    background-color: #f9f9f9;
+  }
+  
+  .input_box_form {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    padding: 0.5rem;
+    background-color: transparent;
+  }
+  
+  .input_box_form::placeholder {
+    color: #aaa;
+  }
+  
+  .input_box_form:focus {
+    border-color: #0070f3; /* Change this color for your preferred focus color */
+  }
+  
