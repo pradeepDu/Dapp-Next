@@ -5,3 +5,4 @@ const NavBar = () => (
     <a className="btn btn-ghost normal-case text-xl">My App</a>
   </div>
 );
+ export default NavBar;
