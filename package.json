@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.9.6",
+    "@thirdweb-dev/sdk": "^4.0.99",
     "axios": "^0.27.2",
     "daisyui": "^4.12.14",
     "dotenv": "^16.4.5",

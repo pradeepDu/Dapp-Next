@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
 import Web3Modal from "web3modal";
 import { ethers } from "ethers";
-import { create as ipfsHttpClient } from "ipfs-http-client";
+import { ThirdwebSDK } from "@thirdweb-dev/sdk"; // Import Thirdweb SDK
 import { useRouter } from "next/router";
 import { VotingAddress, VotingAddressABI } from "./constants";
-
-// Create an IPFS client
-const client = ipfsHttpClient("https://ipfs.infura.io:5001/api/v0");
 
 // Function to fetch the contract instance
 const fetchContract = (signerOrProvider) =>
@@ -20,6 +17,20 @@ export const VotingProvider = ({ children }) => {
     const [currentAccount, setCurrentAccount] = useState('');
     const [candidateArray, setCandidateArray] = useState([]);
     const [error, setError] = useState("");
+
+    // Initialize the Thirdweb SDK with API credentials from environment variables
+    const sdk = new ThirdwebSDK(new ethers.providers.JsonRpcProvider("http://localhost:8545"), {
+        clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID,
+        secretKey: process.env.NEXT_PUBLIC_THIRDWEB_SECRET_KEY,
+    });
+
+    // Convert IPFS URL to HTTP
+    const convertIpfsToHttp = (ipfsUrl) => {
+        if (ipfsUrl.startsWith("ipfs://")) {
+            return ipfsUrl.replace("ipfs://", "https://ipfs.io/ipfs/");
+        }
+        return ipfsUrl; // Return as is if not an IPFS URL
+    };
 
     // Check if wallet is connected
     const checkIfWalletIsConnected = async () => {
@@ -39,13 +50,19 @@ export const VotingProvider = ({ children }) => {
         setCurrentAccount(accounts[0]);
     };
 
-    const uploadToIPFS =async(file)=>{
-        try{
-            const added = await client.add({content:file});
-            const url = 'https://ipfs.infura.io/ipfs/${added.path}';
+    const uploadToIPFS = async (file) => {
+        if (!file) {
+            setError("Please select a file to upload.");
+            return;
+        }
+        try {
+            const uploadedFile = await sdk.storage.upload(file);
+            const url = convertIpfsToHttp(uploadedFile); // Convert to HTTP URL
+            console.log("Uploaded File URL:", url); // Debug: Log the URL
             return url;
-        } catch(error){
-            setError("Error uploading file to IPFS");
+        } catch (error) {
+            setError("Error uploading file to IPFS: " + error.message);
+            console.error(error);
         }
     };
 
@@ -55,7 +72,7 @@ export const VotingProvider = ({ children }) => {
     }, []);
 
     return (
-        <VotingContext.Provider value={{ votingTitle, currentAccount, connectWallet, error, candidateArray,uploadToIPFS }}>
+        <VotingContext.Provider value={{ votingTitle, currentAccount, connectWallet, error, candidateArray, uploadToIPFS }}>
             {children}
         </VotingContext.Provider>
     );
