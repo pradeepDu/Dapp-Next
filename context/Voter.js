@@ -15,7 +15,13 @@ export const VotingProvider = ({ children }) => {
     const router = useRouter();
     const [currentAccount, setCurrentAccount] = useState('');
     const [candidateArray, setCandidateArray] = useState([]);
+    const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
+
     const [error, setError] = useState("");
+    const [voterArray, setVoterArray] = useState([]);
+    const [voterLength, setVoterLength] = useState("");
+    const [voterAddress, setVoterAddress] = useState([]);
+    const [candidateLength, setCandidateLength] = useState("");
 
     const sdk = new ThirdwebSDK(new ethers.providers.JsonRpcProvider("https://eth-sepolia.g.alchemy.com/v2/3WKyJT6bOfqzeL2rf1wfKMwAj0KD-X91"), {
         clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID,
@@ -66,8 +72,6 @@ export const VotingProvider = ({ children }) => {
     const createVoter = useCallback(async (formInput, fileUrl) => {
         try {
             const { name, address, position } = formInput;
-    
-            // Validate input fields
             if (!name || !address || !position) {
                 setError("Please fill in all fields");
                 return;
@@ -75,24 +79,21 @@ export const VotingProvider = ({ children }) => {
     
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            
             let validAddress = address.trim();
             
-            // First check if it's a valid Ethereum address
             if (ethers.utils.isAddress(validAddress)) {
                 // Address is valid, continue
             } else if (validAddress.toLowerCase().endsWith('.eth')) {
-                // Only try ENS resolution for .eth addresses
                 try {
                     const resolvedAddress = await provider.resolveName(validAddress);
                     if (resolvedAddress) {
                         validAddress = resolvedAddress;
                     } else {
-                        setError("Could not resolve ENS name. Please use a valid ENS name or Ethereum address.");
+                        setError("Could not resolve ENS name.");
                         return;
                     }
                 } catch (ensError) {
-                    setError("Error resolving ENS name. Please use a valid Ethereum address.");
+                    setError("Error resolving ENS name.");
                     return;
                 }
             } else {
@@ -107,8 +108,6 @@ export const VotingProvider = ({ children }) => {
             }
     
             const contract = fetchContract(signer);
-    
-            // Prepare data and upload to IPFS
             const data = JSON.stringify({ 
                 name, 
                 address: validAddress, 
@@ -116,12 +115,20 @@ export const VotingProvider = ({ children }) => {
                 image: fileUrl 
             });
     
-            // Upload to IPFS
             const ipfsUrl = await sdk.storage.upload(data);
             const convertedUrl = convertIpfsToHttp(ipfsUrl);
-    
-            // Format the data properly for the contract call
             const formattedAddress = ethers.utils.getAddress(validAddress);
+            
+            // Estimate gas before sending transaction
+            const gasEstimate = await contract.estimateGas.voterRight(
+                formattedAddress,
+                name,
+                convertedUrl,
+                convertedUrl
+            );
+    
+            // Add 20% buffer to gas estimate
+            const gasLimit = Math.floor(gasEstimate.toNumber() * 1.2);
             
             const transaction = await contract.voterRight(
                 formattedAddress,
@@ -129,54 +136,161 @@ export const VotingProvider = ({ children }) => {
                 convertedUrl,
                 convertedUrl,
                 { 
-                    gasLimit: 500000,
+                    gasLimit,
                 }
             );
     
-            // Wait for transaction confirmation
             await transaction.wait();
-    
-            // Navigate to voter list only after successful transaction
             router.push('./voterList');
     
         } catch (error) {
-            if (error.code === 'ACTION_REJECTED') {
-                setError("Transaction was rejected in MetaMask");
-            } else if (error.code === 'INSUFFICIENT_FUNDS') {
-                setError("Insufficient funds for transaction");
-            } else if (error.message.includes("gas")) {
-                setError("Gas estimation failed. The transaction might fail");
-            } else {
-                setError(error.message || "Error creating voter. Please try again.");
-            }
+            handleError(error);
         }
     }, [sdk, router]);
-   
-    
-    
     const getAllVoterData = useCallback(async () => {
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
             const contract = fetchContract(signer);
-
             const code = await provider.getCode(VotingAddress);
             if (code === "0x") {
                 throw new Error("No contract found at the specified address.");
             }
 
             const voterListData = await contract.getVoterList();
-            console.log("Voter List Data: ", voterListData);
-            setCandidateArray(voterListData); // Updated array state name
+            setCandidateArray(voterListData);
+            const pushCandidate = [];
+
+            voterListData.map(async(el) => {
+                const singleVoterData = await contract.getVoterData(el);
+                pushCandidate.push(singleVoterData);    
+            });
+            const voterList = await contract.getVoterLength();
+            setVoterLength(voterList.toNumber());
+          
         } catch (error) {
             console.error("Error fetching voter list:", error);
             setError("Error fetching voter list: " + error.message);
         }
     }, []);
 
-    useEffect(() => {
-        getAllVoterData();
-    }, [getAllVoterData]);
+
+    const giveVote = async(id) => {
+        try {
+            // Voting logic here
+        } catch (error) {
+            console.error("Error giving vote:", error);
+        }
+    };
+
+    const setCandidate = useCallback(async (candidateForm, fileUrl) => {
+        try {
+            const { name, address, age } = candidateForm;
+            if (!name || !address || !age) {
+                setError("Please fill in all fields");
+                return;
+            }
+    
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            let validAddress = address.trim();
+            
+            if (ethers.utils.isAddress(validAddress)) {
+                // Address is valid, continue
+            } else if (validAddress.toLowerCase().endsWith('.eth')) {
+                try {
+                    const resolvedAddress = await provider.resolveName(validAddress);
+                    if (resolvedAddress) {
+                        validAddress = resolvedAddress;
+                    } else {
+                        setError("Could not resolve ENS name.");
+                        return;
+                    }
+                } catch (ensError) {
+                    setError("Error resolving ENS name.");
+                    return;
+                }
+            } else {
+                setError("Please enter a valid Ethereum address or ENS name.");
+                return;
+            }
+    
+            const code = await provider.getCode(VotingAddress);
+            if (code === "0x") {
+                setError("No contract found at the specified address.");
+                return;
+            }
+    
+            const contract = fetchContract(signer);
+            const data = JSON.stringify({ name, address: validAddress, image: fileUrl, age });
+            const ipfsUrl = await sdk.storage.upload(data);
+            const convertedUrl = convertIpfsToHttp(ipfsUrl);
+            const formattedAddress = ethers.utils.getAddress(validAddress);
+            
+            const transaction = await contract.setCandidate(
+                formattedAddress,
+                age,
+                name,
+                fileUrl,
+                convertedUrl,
+                { gasLimit: 500000 }
+            );
+            
+    
+            await transaction.wait();
+            router.push('./');
+    
+        } catch (error) {
+            handleError(error);
+        }
+    }, [sdk, router]);
+
+    const getNewCandidate = useCallback(async () => {
+        try {
+          setIsLoadingCandidates(true);
+          const web3Modal = new Web3Modal();
+          const connection = await web3Modal.connect();
+          const provider = new ethers.providers.Web3Provider(connection);
+          const signer = provider.getSigner();
+          const contract = fetchContract(signer);
+      
+          // Get all candidate addresses
+          const allCandidateAddresses = await contract.getCandidate();
+          console.log("Candidate addresses:", allCandidateAddresses);
+      
+          // Get the total number of candidates
+          const allCandidateLength = await contract.getCandidateLength();
+          setCandidateLength(allCandidateLength.toNumber());
+      
+          // Fetch data for all candidates
+          const candidateDataPromises = allCandidateAddresses.map(async (address) => {
+            try {
+              const candidateData = await contract.getCandidateData(address);
+              return {
+                name: candidateData[0],
+                address: candidateData[5],
+                age: candidateData[3],
+                image: candidateData[1],
+                voteCount: typeof candidateData[4] === 'number' ? candidateData[4] : 0,
+                ipfs: candidateData[6],
+              };
+            } catch (error) {
+              console.error(`Error fetching candidate data for address ${address}:`, error);
+              return null;
+            }
+          });
+      
+          const candidateDataResults = await Promise.all(candidateDataPromises);
+          const processedCandidates = candidateDataResults.filter(Boolean);
+          console.log("Processed candidates:", processedCandidates);
+          setCandidateArray(processedCandidates);
+        } catch (error) {
+          console.error("Error fetching candidates:", error);
+          setError("Failed to fetch candidates: " + error.message);
+        } finally {
+          setIsLoadingCandidates(false);
+        }
+      }, [fetchContract]);
 
     return (
         <VotingContext.Provider value={{
@@ -185,8 +299,16 @@ export const VotingProvider = ({ children }) => {
             connectWallet,
             error,
             candidateArray,
-            uploadToIPFS,
+            voterArray,
+            voterLength,
+            setCandidate,
             createVoter,
+            getAllVoterData,
+            getNewCandidate,
+            giveVote,
+            uploadToIPFS,
+            candidateLength,
+            isLoadingCandidates
         }}>
             {children}
         </VotingContext.Provider>
