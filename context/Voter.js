@@ -11,29 +11,24 @@ const fetchContract = (signerOrProvider) =>
 export const VotingContext = React.createContext();
 
 export const VotingProvider = ({ children }) => {
-    const votingTitle = "My first smart contract app";
+    const votingTitle = "List of Candidates for Election";
     const router = useRouter();
     const [currentAccount, setCurrentAccount] = useState('');
     const [candidateArray, setCandidateArray] = useState([]);
     const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
-
+    const [isLoadingVoters, setIsLoadingVoters] = useState(false);
     const [error, setError] = useState("");
     const [voterArray, setVoterArray] = useState([]);
-    const [voterLength, setVoterLength] = useState("");
+    const [voterLength, setVoterLength] = useState(0);
     const [voterAddress, setVoterAddress] = useState([]);
     const [candidateLength, setCandidateLength] = useState("");
+    const [votedVoters, setVotedVoters] = useState([]);
 
     const sdk = new ThirdwebSDK(new ethers.providers.JsonRpcProvider("https://eth-sepolia.g.alchemy.com/v2/3WKyJT6bOfqzeL2rf1wfKMwAj0KD-X91"), {
         clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID,
         secretKey: process.env.NEXT_PUBLIC_THIRDWEB_SECRET_KEY,
     });
 
-    const convertIpfsToHttp = (ipfsUrl) => {
-        if (ipfsUrl.startsWith("ipfs://")) {
-            return ipfsUrl.replace("ipfs://", "https://ipfs.io/ipfs/");
-        }
-        return ipfsUrl;
-    };
 
     const checkIfWalletIsConnected = useCallback(async () => {
         if (!window.ethereum) return console.log("No Ethereum wallet found");
@@ -147,41 +142,107 @@ export const VotingProvider = ({ children }) => {
             handleError(error);
         }
     }, [sdk, router]);
+    
+    const convertIpfsToHttp = (ipfsUrl) => {
+        if (!ipfsUrl) return '';
+        if (ipfsUrl.startsWith("ipfs://")) {
+            return `https://ipfs.io/ipfs/${ipfsUrl.slice(7)}`;
+        }
+        // Handle direct CID format
+        if (ipfsUrl.match(/^[a-zA-Z0-9]{46,59}$/)) {
+            return `https://ipfs.io/ipfs/${ipfsUrl}`;
+        }
+        // If it's already an HTTP URL, return as is
+        if (ipfsUrl.startsWith("http")) {
+            return ipfsUrl;
+        }
+        return ipfsUrl;
+    };
+
     const getAllVoterData = useCallback(async () => {
         try {
+            setIsLoadingVoters(true);
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
             const contract = fetchContract(signer);
-            const code = await provider.getCode(VotingAddress);
-            if (code === "0x") {
-                throw new Error("No contract found at the specified address.");
-            }
 
-            const voterListData = await contract.getVoterList();
-            setCandidateArray(voterListData);
-            const pushCandidate = [];
+            const voterAddressList = await contract.getVoterList();
+            setVoterAddress(voterAddressList);
 
-            voterListData.map(async(el) => {
-                const singleVoterData = await contract.getVoterData(el);
-                pushCandidate.push(singleVoterData);    
+            const totalVoters = await contract.getVoterLength();
+            setVoterLength(totalVoters.toNumber());
+
+            const votedVotersList = await contract.getVotedVoterList();
+            setVotedVoters(votedVotersList);
+
+            const voterDataPromises = voterAddressList.map(async (address) => {
+                try {
+                    const voterData = await contract.getVoterData(address);
+                    const imageUrl = convertIpfsToHttp(voterData[2]); // Convert IPFS URL
+                    return {
+                        voterId: voterData[0].toNumber(),
+                        name: voterData[1],
+                        image: imageUrl, // Use converted URL
+                        address: voterData[3],
+                        ipfs: convertIpfsToHttp(voterData[4]), // Convert IPFS URL
+                        allowed: voterData[5].toNumber(),
+                        hasVoted: voterData[6],
+                    };
+                } catch (error) {
+                    console.error(`Error fetching voter data for ${address}:`, error);
+                    return null;
+                }
             });
-            const voterList = await contract.getVoterLength();
-            setVoterLength(voterList.toNumber());
-          
+
+            const voterDataResults = await Promise.all(voterDataPromises);
+            const processedVoters = voterDataResults.filter(Boolean);
+            setVoterArray(processedVoters);
+
         } catch (error) {
-            console.error("Error fetching voter list:", error);
-            setError("Error fetching voter list: " + error.message);
+            console.error("Error fetching voter data:", error);
+            setError("Failed to fetch voter data: " + error.message);
+        } finally {
+            setIsLoadingVoters(false);
         }
     }, []);
+    // ... (keep existing createVoter, setCandidate, getNewCandidate functions)
 
-
-    const giveVote = async(id) => {
-        try {
-            // Voting logic here
-        } catch (error) {
-            console.error("Error giving vote:", error);
+    useEffect(() => {
+        if (currentAccount) {
+            getAllVoterData();
         }
-    };
+    }, [currentAccount, getAllVoterData]);
+
+    const giveVote = async (candidateAddress, candidateVoteId) => {
+        try {
+          // Check if MetaMask is available
+          if (typeof window.ethereum === 'undefined') {
+            console.error('MetaMask is not installed!');
+            return;
+          }
+      
+          // Create a provider from MetaMask
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+      
+          // Get the signer (this is the MetaMask wallet)
+          const signer = provider.getSigner();
+      
+          // Define your contract (make sure contractAddress and contractABI are defined)
+          const contract = new ethers.Contract(VotingAddress,VotingAddressABI, signer);
+      
+          // Call the vote function in your contract
+          const transaction = await contract.vote(candidateAddress, candidateVoteId);
+          
+          // Wait for the transaction to be mined
+          await transaction.wait();
+      
+          console.log('Vote successfully casted!');
+          // Optionally, update state or show a success message here
+        } catch (error) {
+          console.error('Error casting vote:', error);
+          // Optionally, show an error message to the user
+        }
+      };
 
     const setCandidate = useCallback(async (candidateForm, fileUrl) => {
         try {
@@ -292,7 +353,7 @@ export const VotingProvider = ({ children }) => {
         }
       }, [fetchContract]);
 
-    return (
+      return (
         <VotingContext.Provider value={{
             votingTitle,
             currentAccount,
@@ -308,9 +369,15 @@ export const VotingProvider = ({ children }) => {
             giveVote,
             uploadToIPFS,
             candidateLength,
-            isLoadingCandidates
+            isLoadingCandidates,
+            isLoadingVoters,
+            votedVoters,
+            voterAddress,
+            convertIpfsToHttp
         }}>
             {children}
         </VotingContext.Provider>
     );
 };
+
+    

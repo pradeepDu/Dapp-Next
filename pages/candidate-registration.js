@@ -32,40 +32,19 @@ const AddressInput = ({ value, handleClick }) => {
 };
 
 const CandidateCard = ({ candidate }) => {
-  if (!candidate) return null;
-
   return (
-    <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+    <div className="card bg-base-100 shadow-lg">
       <div className="p-4">
         <div className="flex items-center space-x-4">
-          <div className="relative w-16 h-16">
-            {candidate.image ? (
-              <img 
-                src={candidate.image} 
-                alt={candidate.name}
-                className="w-16 h-16 rounded-full object-cover"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "/placeholder-avatar.png"; // Add a placeholder image
-                }}
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                <span className="text-2xl text-gray-500">{candidate.name?.[0]?.toUpperCase()}</span>
-              </div>
-            )}
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-lg">{candidate.name}</h3>
-            <p className="text-sm text-gray-600 truncate">
-              Address: {`${candidate.address?.slice(0, 6)}...${candidate.address?.slice(-4)}`}
-            </p>
+          <img 
+            src={candidate.image} 
+            alt={candidate.name}
+            className="w-16 h-16 rounded-full object-cover"
+          />
+          <div>
+            <h3 className="font-semibold">{candidate.name}</h3>
+            <p className="text-sm text-gray-600 truncate">Address: {candidate.address}</p>
             <p className="text-sm text-gray-600">Age: {candidate.age}</p>
-            {candidate.voteCount !== undefined && (
-              <p className="text-sm text-primary font-medium mt-1">
-                Votes: {candidate.voteCount}
-              </p>
-            )}
           </div>
         </div>
       </div>

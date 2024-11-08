@@ -16,12 +16,15 @@
     "dotenv": "^16.4.5",
     "ethers": "^5.7.2",
     "ipfs-http-client": "^60.0.1",
+    "lucide-react": "^0.455.0",
     "next": "12.2.1",
     "react": "18.2.0",
     "react-countdown": "^2.3.2",
     "react-dom": "18.2.0",
     "react-dropzone": "^14.2.2",
     "react-icons": "^4.4.0",
+    "react-router-dom": "^6.28.0",
+    "recharts": "^2.13.3",
     "web3modal": "^1.9.8"
   },
   "devDependencies": {
