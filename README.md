@@ -1,90 +1,84 @@
+# Blockchain Voting DApp
 
-# Voting Dapp (Decentralized)
-
-Build Blockchain Voting Dapp (Decentralized) using Nextjs, Solidity, MetaMask & Hardhat | Voting App
-
+A decentralized voting application built with **Next.js**, **Solidity**, **MetaMask**, **Hardhat**, and **Tailwind CSS**. This DApp provides a secure, transparent, and tamper-proof voting platform on the Ethereum blockchain.
 
 ## Project Overview
-###1. Frontend with Next.js and tailwind css
-User Interface (UI): Next.js is used for the frontend, providing a responsive interface where users can register, view candidates, and vote. You’ll create pages for candidate registration, viewing voter lists, casting votes, and viewing results.
-MetaMask Integration: Users connect their MetaMask wallet to the DApp for authentication and authorization. MetaMask acts as a gateway for users to interact with the Ethereum blockchain.
-###2. Smart Contract Development with Solidity
-Voting Contract: A Solidity smart contract is created to handle voting logic, candidate registration, and eligibility checks. The contract:
-Registers Candidates: Allows authorized users to add candidates.
-Records Votes: Stores votes on-chain to ensure transparency and immutability.
-Ensures Eligibility: Checks voter eligibility to prevent double voting.
-Data Storage: The smart contract securely stores the voting data on the blockchain, making it accessible and verifiable.
-###3. Blockchain Interaction with Hardhat
-Smart Contract Compilation and Deployment: Hardhat is used to compile, deploy, and test the Solidity contract locally on the Hardhat network or a testnet like Sepolia.
-Testing and Debugging: Hardhat allows testing the voting contract functions, such as candidate registration, vote casting, and vote counting, before deployment.
-###4. Voting and Data Flow
-Candidate Registration: Admins register candidates, which get stored on the blockchain. This data is fetched by Next.js to display in the UI.
-Casting Votes: Users connect their MetaMask wallet, select a candidate, and cast their vote, which triggers a transaction on the blockchain.
-Viewing Results: The app fetches vote counts from the contract, providing real-time results directly from the blockchain.
 
+1. **Frontend with Next.js and Tailwind CSS**
+   - **User Interface**: Built with Next.js and styled using Tailwind CSS, providing a responsive and user-friendly UI. Users can register, view candidates, cast votes, and see voting results.
+   - **MetaMask Integration**: Users connect their MetaMask wallet to the DApp for authentication and authorization, allowing interaction with the Ethereum blockchain.
 
-## Instruction
+2. **Smart Contract Development with Solidity**
+   - **Voting Contract**: A Solidity smart contract is created to handle all voting logic, candidate registration, and eligibility checks. The contract:
+     - **Registers Candidates**: Allows authorized users to add candidates.
+     - **Records Votes**: Stores votes securely on the blockchain to ensure transparency.
+     - **Ensures Eligibility**: Checks voter eligibility to prevent double voting.
+     - **Data Storage**: Stores all voting data on-chain, making it accessible and verifiable.
 
-Kindly follow the following Instructions to run the project in your system and install the necessary requirements
+3. **Blockchain Interaction with Hardhat**
+   - **Smart Contract Compilation and Deployment**: Hardhat is used for compiling, deploying, and testing the Solidity contract locally or on the Sepolia testnet.
+   - **Testing and Debugging**: Hardhat enables testing and debugging of key functions like candidate registration, vote casting, and vote counting.
 
+4. **Voting and Data Flow**
+   - **Candidate Registration**: Admins register candidates, storing the data on the blockchain. Next.js retrieves this data for display in the UI.
+   - **Casting Votes**: Users connect their MetaMask wallet, select a candidate, and cast a vote, which triggers a transaction recorded on-chain.
+   - **Viewing Results**: The app fetches vote counts from the blockchain in real-time.
 
-```https://code.visualstudio.com/download
-  WATCH: Setup & Demo Of Project
-```
+## Setup Instructions
 
-#### Install Vs Code Editor
+### Prerequisites
 
-```https://code.visualstudio.com/download
-  GET: VsCode Editor
-```
+- **VS Code Editor**  
+  [Download VS Code](https://code.visualstudio.com/download)
 
-#### NodeJs & NPM Version
+- **Node.js and NPM**  
+  - Node.js: v18.12.1  
+  - NPM: 8.19.2  
+  [Download Node.js](https://nodejs.org/en/download)
 
-```https://nodejs.org/en/download
-  NodeJs: v18.12.1
-  NPM: 8.19.2
-```
+- **Thirdweb SDK**  
+  - Get your Thirdweb SDK API Key and Secret Key  
+  [Visit Thirdweb](https://thirdweb.com/)
 
-#### Setup Video
+- **Test Faucets**  
+  - Use Chainlink faucets to get free test Ether for deployment on Sepolia  
+  [Get Test Faucets](https://faucets.chain.link/)
 
-```https://code.visualstudio.com/download
-  WATCH: Setup & Demo Of Project
-```
+- **Remix IDE**  
+  - Used for deploying contracts and generating the ABI.  
+  [Open Remix IDE](https://remix-project.org)
 
-#### Install Vs Code Editor
+### Getting Started
 
-```https://code.visualstudio.com/download
-  GET: VsCode Editor
-```
-#### NodeJs & NPM Version
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/your-username/blockchain-voting-dapp.git
+   cd blockchain-voting-dapp
+   ```
 
-```https://nodejs.org/en/download
-  NodeJs: v18.12.1
-  NPM: 8.19.2
-```
+2. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-#### ThirdWeb
+3. **Set Up Environment Variables**
+   - In the root directory, create a `.env` file and add the following:
+     ```plaintext
+     NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_thirdweb_client_id
+     NEXT_PUBLIC_THIRDWEB_SECRET_KEY=your_thirdweb_secret_key
+     ```
 
-```https://thirdweb.com/
-  thirdwebsdk API KEY
-  thirdwebsdk SECRET KEY
-```
-#### Test Faucets
+4. **Compile and Deploy Smart Contract**
+   - Use Hardhat or Remix IDE to compile and deploy the Solidity smart contract.
+   - Deploy on Sepolia or a local Hardhat network.
 
-Chainlink will provide you with some free test faucets which you can transfer to your wallet address for deploying the contract
+5. **Run the DApp**
+   ```bash
+   npm run dev
+   ```
+6. **Connect MetaMask**
+   - Configure MetaMask to connect with Sepolia Testnet or your local Hardhat network.
 
-```https://faucets.chain.link/
-  Get: Free Test Faucets
-```
-
-#### RemixID
-
-I have used RemixID for deploying the contract and generation of the ABI in the project, but you can use any other tools like Hardhat, etc.
-
-```https://remix-project.org
-  OPEN: RemixID
-```
-
-#### Sepolia Testnet
-
-```I have used sepolia testnet to deploy the contract that has been used over here
+### Additional Resources  
+- **Sepolia Testnet**  
+  - [Learn more about Sepolia](https://sepolia.net/)
