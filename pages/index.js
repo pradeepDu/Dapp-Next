@@ -1,9 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
-import Image from 'next/image';
 import { ethers } from 'ethers';
 import { VotingContext } from '../context/Voter';
 import { VotingAddress, VotingAddressABI } from '../context/constants';
-import backgroundImage from '../assets/back.jpg';
+
 const Card = ({ children, className }) => (
   <div className={`card bg-base-200 shadow-xl ${className}`}>
     {children}
@@ -23,10 +22,7 @@ const CardContent = ({ children }) => (
 );
 
 const Button = ({ children, onClick, className }) => (
-  <button
-    onClick={onClick}
-    className={`btn btn-primary ${className}`}
-  >
+  <button onClick={onClick} className={`btn btn-primary ${className}`}>
     {children}
   </button>
 );
@@ -71,7 +67,7 @@ const VotingHomepage = () => {
     giveVote,
     voterLength,
     candidateLength,
-    getAllVoterData
+    getAllVoterData,
   } = useContext(VotingContext);
 
   const [isStatsLoading, setIsStatsLoading] = useState(false);
@@ -80,42 +76,34 @@ const VotingHomepage = () => {
   const refreshData = async () => {
     setIsStatsLoading(true);
     try {
-      await Promise.all([
-        getNewCandidate(),
-        getAllVoterData()
-      ]);
+      await Promise.all([getNewCandidate(), getAllVoterData()]);
     } catch (error) {
-      console.error("Error refreshing data:", error);
+      console.error('Error refreshing data:', error);
     } finally {
       setIsStatsLoading(false);
     }
   };
 
-  // Initial data load
   useEffect(() => {
     refreshData();
   }, [refreshTrigger]);
 
-  // Set up event listeners for contract events
   useEffect(() => {
     if (window.ethereum) {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const contract = new ethers.Contract(VotingAddress, VotingAddressABI, provider);
 
-      // Updated event filters to match your contract events
       const voterCreatedFilter = contract.filters.VoterCreated();
       const candidateCreateFilter = contract.filters.CandidateCreate();
 
       const handleEvent = () => {
-        console.log("Contract event detected, refreshing data...");
-        setRefreshTrigger(prev => prev + 1);
+        console.log('Contract event detected, refreshing data...');
+        setRefreshTrigger((prev) => prev + 1);
       };
 
-      // Subscribe to events
       contract.on(voterCreatedFilter, handleEvent);
       contract.on(candidateCreateFilter, handleEvent);
 
-      // Cleanup
       return () => {
         contract.off(voterCreatedFilter, handleEvent);
         contract.off(candidateCreateFilter, handleEvent);
@@ -123,16 +111,14 @@ const VotingHomepage = () => {
     }
   }, []);
 
-  // Handle vote submission
-  const handleVote = async (address, voteId) => {
+  const handleVote = async (voterAddress, voterId) => {
     try {
-      await giveVote(address, voteId);
-      // Add slight delay before refreshing to allow transaction to be processed
+      await giveVote(voterAddress, voterId);
       setTimeout(() => {
-        setRefreshTrigger(prev => prev + 1);
+        setRefreshTrigger((prev) => prev + 1);
       }, 2000);
     } catch (error) {
-      console.error("Error casting vote:", error);
+      console.error('Error casting vote:', error);
     }
   };
 
@@ -140,7 +126,7 @@ const VotingHomepage = () => {
     <div
       className="hero min-h-screen"
       style={{
-        backgroundImage: `url(${backgroundImage.src})`,
+        backgroundImage: `url('/back.jpg')`, // Use public path for the image
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -149,9 +135,9 @@ const VotingHomepage = () => {
       <div className="hero-content flex-col w-full">
         <div className="text-center text-neutral-content">
           <h1 className="text-5xl font-bold mb-8">{votingTitle}</h1>
-          <StatsCard 
-            voterLength={voterLength} 
-            candidateLength={candidateLength} 
+          <StatsCard
+            voterLength={voterLength}
+            candidateLength={candidateLength}
             isLoading={isStatsLoading}
           />
         </div>
@@ -178,10 +164,7 @@ const VotingHomepage = () => {
                   <p className="text-base-content/70">Age: {candidate.age}</p>
                   <p className="text-base-content/70">Votes: {candidate.voteCount}</p>
                   <div className="card-actions justify-end">
-                    <Button
-                      onClick={() => handleVote(candidate.address, candidate.candidateId)}
-                      className=""
-                    >
+                    <Button onClick={() => handleVote(candidate.address, candidate.candidateId)} className="">
                       Vote
                     </Button>
                   </div>

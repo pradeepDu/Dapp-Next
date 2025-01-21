@@ -165,16 +165,16 @@ export const VotingProvider = ({ children }) => {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
             const contract = fetchContract(signer);
-
+    
             const voterAddressList = await contract.getVoterList();
             setVoterAddress(voterAddressList);
-
+    
             const totalVoters = await contract.getVoterLength();
             setVoterLength(totalVoters.toNumber());
-
+    
             const votedVotersList = await contract.getVotedVoterList();
             setVotedVoters(votedVotersList);
-
+    
             const voterDataPromises = voterAddressList.map(async (address) => {
                 try {
                     const voterData = await contract.getVoterData(address);
@@ -193,11 +193,11 @@ export const VotingProvider = ({ children }) => {
                     return null;
                 }
             });
-
+    
             const voterDataResults = await Promise.all(voterDataPromises);
             const processedVoters = voterDataResults.filter(Boolean);
             setVoterArray(processedVoters);
-
+    
         } catch (error) {
             console.error("Error fetching voter data:", error);
             setError("Failed to fetch voter data: " + error.message);
@@ -205,15 +205,14 @@ export const VotingProvider = ({ children }) => {
             setIsLoadingVoters(false);
         }
     }, []);
-    // ... (keep existing createVoter, setCandidate, getNewCandidate functions)
-
+    
     useEffect(() => {
         if (currentAccount) {
             getAllVoterData();
         }
     }, [currentAccount, getAllVoterData]);
-
-    const giveVote = async (candidateAddress, candidateVoteId) => {
+    
+    /*const giveVote = async (candidateAddress, candidateVoteId) => {
         try {
           // Check if MetaMask is available
           if (typeof window.ethereum === 'undefined') {
@@ -229,6 +228,7 @@ export const VotingProvider = ({ children }) => {
       
           // Define your contract (make sure contractAddress and contractABI are defined)
           const contract = new ethers.Contract(VotingAddress,VotingAddressABI, signer);
+        
       
           // Call the vote function in your contract
           const transaction = await contract.vote(candidateAddress, candidateVoteId);
@@ -242,7 +242,24 @@ export const VotingProvider = ({ children }) => {
           console.error('Error casting vote:', error);
           // Optionally, show an error message to the user
         }
-      };
+      };*/
+      const giveVote = async (id) => {
+        try {
+            const voterAddress = id.address;
+            const voterId = id.id;
+            const web3Modal = new Web3Modal();
+            const connection = await web3Modal.connect();
+            const provider = new ethers.providers.Web3Provider(connection);
+            const signer = provider.getSigner();
+            const contract = fetchContract(signer);
+    
+            const voterList = await contract.vote(voterAddress, voterId);
+            console.log(voterList);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+    
 
     const setCandidate = useCallback(async (candidateForm, fileUrl) => {
         try {
