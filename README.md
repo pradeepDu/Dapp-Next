@@ -78,7 +78,10 @@ A decentralized voting application built with **Next.js**, **Solidity**, **MetaM
    ```
 6. **Connect MetaMask**
    - Configure MetaMask to connect with Sepolia Testnet or your local Hardhat network.
-
+     
+7. **Deployed Website**
+   - https://dapp-next-mu.vercel.app/
+   
 ### Additional Resources  
 - **Sepolia Testnet**  
   - [Learn more about Sepolia](https://sepolia.net/)
