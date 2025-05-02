@@ -36,7 +36,7 @@ A decentralized voting application built with **Next.js**, **Solidity**, **MetaM
   - NPM: 8.19.2  
   [Download Node.js](https://nodejs.org/en/download)
 
-- **Thirdweb SDK**  
+- **Thirdweb SDK** (This is deprecated as it is now a paid service and need to paid to restart the IPFS)  
   - Get your Thirdweb SDK API Key and Secret Key  
   [Visit Thirdweb](https://thirdweb.com/)
 
